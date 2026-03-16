@@ -3,378 +3,438 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>O jardim de Alanna 2</title>
+    <title>O jardim de Alanna 2- O jardim da princesa</title>
     <style>
         :root {
+            --grass-light: #9ccc65;
+            --grass-dark: #8bc34a;
             --ui-pink: #f06292;
-            --ui-dark-pink: #ad1457;
+            --sun-yellow: #fdd835;
         }
-
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
         body, html {
             margin: 0; padding: 0; width: 100%; height: 100%;
-            overflow: hidden; background-color: #263238;
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            overflow: hidden; background-color: #33691e;
+            font-family: 'Georgia', serif;
             user-select: none; -webkit-user-select: none; touch-action: none;
         }
 
         #game-wrapper {
             width: 100vw; height: 100vh;
             display: flex; justify-content: center; align-items: center;
-            background: #1a1a1a;
+            background: #1b3011;
         }
 
         #game-container {
-            position: relative;
-            background: #689f38;
-            overflow: hidden;
-            box-shadow: 0 0 50px rgba(0,0,0,0.5);
-            border: 4px solid #3e2723;
+            position: relative; 
+            width: 1100px; height: 550px; /* Tamanho fixo interno para proporção */
+            background: linear-gradient(to bottom, #aed581, #558b2f);
+            transform-origin: center;
         }
 
-        #top-bar {
-            position: absolute; top: 10px; left: 50%;
-            transform: translateX(-50%);
-            width: 90%; height: 50px;
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 12px; border: 2px solid var(--ui-pink);
-            display: flex; align-items: center; justify-content: space-between;
-            padding: 0 15px; z-index: 100;
+        #top-hud {
+            position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
+            width: 95%; height: 80px;
+            padding: 8px 15px;
+            display: flex; justify-content: space-between; align-items: center;
+            z-index: 100;
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(10px);
+            border-radius: 50px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+            border: 3px solid var(--ui-pink);
         }
 
-        .stats { display: flex; align-items: center; gap: 8px; font-weight: bold; color: #f9a825; }
-        
-        .cards-container { display: flex; gap: 5px; }
+        .resource-container { 
+            display: flex; align-items: center; gap: 8px; 
+            background: #fff; padding: 4px 12px; border-radius: 20px;
+        }
+        #sun-icon-canvas { width: 32px; height: 32px; }
+        .love-text { font-size: 1.4rem; font-weight: bold; color: #f9a825; }
+
+        .inventory { display: flex; gap: 6px; }
         .card {
-            width: 42px; height: 42px; background: #fff;
-            border: 2px solid #ddd; border-radius: 8px;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            transition: transform 0.1s;
+            width: 54px; height: 74px; background: #fff;
+            border-radius: 10px; border: 2px solid #eee;
+            display: flex; flex-direction: column; align-items: center;
+            justify-content: center; cursor: pointer; transition: 0.2s;
         }
-        .card.active { border-color: var(--ui-pink); background: #fce4ec; transform: translateY(-3px); }
-        .card.disabled { opacity: 0.4; }
-        .card-emoji { font-size: 1.2rem; }
-        .card-cost { font-size: 0.6rem; color: #333; font-weight: bold; }
+        .card.selected { border-color: var(--ui-pink); transform: translateY(-5px); box-shadow: 0 5px 15px rgba(240, 98, 146, 0.4); }
+        .card.disabled { opacity: 0.4; filter: grayscale(1); }
+        .card-emoji { font-size: 1.6rem; }
+        .card-cost { font-size: 0.7rem; font-weight: bold; color: #444; }
 
-        #landscape-msg {
+        canvas#gameCanvas {
+            display: block;
+            background: #689f38;
+            border-bottom: 8px solid #4e342e;
+            position: absolute; bottom: 0;
+        }
+
+        .modal {
+            position: absolute; inset: 0; background: rgba(0,0,0,0.92);
+            display: flex; flex-direction: column; justify-content: center;
+            align-items: center; z-index: 500; color: white; text-align: center;
+            padding: 25px;
+        }
+
+        .prologue-text {
+            max-width: 600px; font-size: 1.3rem; line-height: 1.6;
+            font-style: italic; color: #fce4ec; margin-bottom: 25px;
+        }
+
+        .btn-action {
+            padding: 12px 40px; font-size: 1.2rem; color: #fff;
+            background: var(--ui-pink); border: none; border-radius: 30px;
+            cursor: pointer; font-weight: bold; box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        #landscape-alert {
             display: none; position: fixed; inset: 0; background: #ad1457;
-            z-index: 1000; color: white; flex-direction: column;
+            z-index: 9999; color: white; flex-direction: column;
             justify-content: center; align-items: center; text-align: center;
         }
+        @media (orientation: portrait) { #landscape-alert { display: flex; } }
 
-        @media (orientation: portrait) { #landscape-msg { display: flex; } }
-
-        .overlay {
-            position: absolute; inset: 0; background: rgba(0,0,0,0.85);
-            display: flex; flex-direction: column; justify-content: center;
-            align-items: center; z-index: 200; color: white; text-align: center;
-        }
-
-        .btn {
-            background: var(--ui-pink); color: white; border: none;
-            padding: 12px 30px; border-radius: 25px; font-weight: bold;
-            font-size: 1rem; margin-top: 15px; box-shadow: 0 4px 0 var(--ui-dark-pink);
-        }
-        .btn:active { transform: translateY(2px); box-shadow: 0 2px 0 var(--ui-dark-pink); }
+        #m-win { background: radial-gradient(circle, #f48fb1, #880e4f); }
+        .heart-rain { position: absolute; pointer-events: none; animation: fall linear infinite; }
+        @keyframes fall { to { transform: translateY(100vh) rotate(360deg); } }
     </style>
 </head>
 <body>
 
-<div id="landscape-msg">
+<div id="landscape-alert">
     <div style="font-size: 3rem;">📱🔄</div>
-    <p>Gire o celular para jogar!</p>
+    <h2>Vire o celular para jogar</h2>
 </div>
 
 <div id="game-wrapper">
     <div id="game-container">
-        <div id="top-bar">
-            <div class="stats">
-                <span id="love-count">150</span> ☀️
+        <div id="top-hud" style="display: none;">
+            <div class="resource-container">
+                <canvas id="sun-icon-canvas"></canvas>
+                <span id="love-val" class="love-text">150</span>
             </div>
-            <div class="cards-container" id="inventory"></div>
-            <div id="wave-txt" style="font-size: 0.7rem; color: var(--ui-dark-pink); font-weight: bold;">Onda 1/3</div>
-        </div>
-        <canvas id="mainCanvas"></canvas>
-
-        <div id="menu-start" class="overlay">
-            <h1 style="color: var(--ui-pink); margin: 0;">O Jardim de Alanna 2</h1>
-            <p style="font-style: italic; max-width: 300px; font-size: 0.9rem;">Proteja o brilho da princesa contra as sombras do mal.</p>
-            <button class="btn" onclick="start()">Entrar no Jardim</button>
+            <div class="inventory" id="inv"></div>
+            <div id="wave-info" style="font-weight:bold; color:#ad1457; font-size:0.9rem; padding:0 10px;">Onda 1/3</div>
         </div>
 
-        <div id="menu-win" class="overlay" style="display:none">
-            <h2 style="color: #ffeb3b;">💖 Amor Eterno! 💖</h2>
-            <p style="font-size: 0.9rem; padding: 0 20px;">Você defendeu o jardim perfeitamente, minha princesa!</p>
-            <button class="btn" onclick="location.reload()">Recomeçar</button>
+        <canvas id="gameCanvas"></canvas>
+
+        <div id="m-prologue" class="modal">
+            <h1 style="color: var(--ui-pink); font-size: 2.2rem;">O jardim de Alanna 2</h1>
+            <div class="prologue-text">
+                "Era uma vez uma linda princesa que vivia no reino de Lannaland. <br><br>
+                Um dia, monstros ousaram atacá-la, mas o seu jardim encantado a protege."
+            </div>
+            <button class="btn-action" onclick="startGame()">Começar Defesa</button>
+        </div>
+
+        <div id="m-win" class="modal" style="display:none">
+            <h2 style="font-size: 2.2rem;">💖 Vitória do Amor! 💖</h2>
+            <p style="font-size: 1.3rem; line-height: 1.6; margin: 20px 0;">
+                Feliz 5 meses, minha princesa. Obrigado por me escolher.<br><strong>EU TE AMO!</strong>
+            </p>
+            <button class="btn-action" style="background: white; color: #ad1457;" onclick="location.reload()">Recomeçar</button>
+        </div>
+
+        <div id="m-lose" class="modal" style="display:none">
+            <h1 style="color: #ff5252;">O Jardim foi invadido...</h1>
+            <button class="btn-action" onclick="location.reload()">Tentar Novamente</button>
         </div>
     </div>
 </div>
 
 <script>
-const ROWS = 5, COLS = 11, GRID_W = 100, GRID_H = 80;
-const WIDTH = COLS * GRID_W, HEIGHT = ROWS * GRID_H;
+const CELL_W = 100, CELL_H = 85, ROWS = 5, COLS = 11;
+const CANVAS_W = CELL_W * COLS;
+const CANVAS_H = CELL_H * ROWS;
 
-const DATA = {
-    'GIRASSOL': { emoji: '🌻', cost: 50, hp: 150, type: 'prod', rate: 10000, color: '#fbc02d' },
-    'ROSA': { emoji: '🌹', cost: 100, hp: 200, type: 'atk', dmg: 35, cool: 1500, bullet: '#f06292' },
-    'LIRIO': { emoji: '🪷', cost: 50, hp: 800, type: 'tank', color: '#b2dfdb' },
-    'HORTENSIA': { emoji: '💠', cost: 175, hp: 350, type: 'atk', dmg: 25, cool: 1800, slow: true, bullet: '#81d4fa' }
+const FLOWER_DATA = {
+    'GIRASSOL': { emoji: '🌻', cost: 50, hp: 150, color: '#fbc02d', type: 'prod', rate: 12000 },
+    'ROSA': { emoji: '🌹', cost: 100, hp: 200, color: '#e91e63', type: 'atk', dmg: 35, cool: 1500, bullet: '#ff4081' },
+    'LIRIO': { emoji: '🪷', cost: 50, hp: 840, color: '#e0f2f1', type: 'tank' },
+    'HORTENSIA': { emoji: '💠', cost: 175, hp: 350, color: '#64b5f6', type: 'atk', dmg: 22, cool: 1900, slow: true, bullet: '#b3e5fc' },
+    'ORQUIDEA': { emoji: '🌺', cost: 250, hp: 450, color: '#ba68c8', type: 'atk', dmg: 140, cool: 3200, area: 130, bullet: '#e1bee7' },
+    'DENTE': { emoji: '🌼', cost: 125, hp: 100, color: '#fff176', type: 'bomb', dmg: 1000, range: 180 }
 };
 
-const ENEMIES = {
-    'Sombra': { hp: 100, speed: 0.7, sz: 38, color: '#263238' },
-    'Espectro': { hp: 80, speed: 1.5, sz: 32, color: '#6a1b9a' },
-    'Nuvem': { hp: 650, speed: 0.4, sz: 55, color: '#455a64' }
+const MONSTER_DATA = {
+    'Sombra': { color: '#2c3e50', hp: 90, speed: 0.6, sz: 35 },
+    'Espectro': { color: '#8e44ad', hp: 70, speed: 1.4, sz: 30 },
+    'Ladrão': { color: '#16a085', hp: 110, speed: 1.1, sz: 32 },
+    'Nuvem': { color: '#34495e', hp: 600, speed: 0.35, sz: 55 }
 };
 
-let canvas, ctx, love = 150, state = 'START', selected = null;
-let plants = [], zombies = [], bullets = [], suns = [], misas = [];
-let wave = 1, progress = 0, nextZombie = 0, nextSun = 2000;
+const PHRASES = ["Vou proteger a princesa!", "Ninguém toca nela!", "Pela Rainha Alanna!", "O jardim não cairá!"];
 
-function setup() {
-    canvas = document.getElementById('mainCanvas');
-    ctx = canvas.getContext('2d');
-    canvas.width = WIDTH; canvas.height = HEIGHT;
-    
-    resize();
-    window.addEventListener('resize', resize);
-
-    const inv = document.getElementById('inventory');
-    Object.keys(DATA).forEach(k => {
-        const c = document.createElement('div');
-        c.className = 'card';
-        c.innerHTML = `<span class="card-emoji">${DATA[k].emoji}</span><span class="card-cost">${DATA[k].cost}</span>`;
-        c.onclick = () => {
-            if(love >= DATA[k].cost) {
-                selected = (selected === k) ? null : k;
-                updateCards();
-            }
-        };
-        inv.appendChild(c);
-    });
-
-    for(let i=0; i<ROWS; i++) misas.push({row: i, x: 25, y: i*GRID_H + GRID_H/2, active: false, used: false});
-
-    canvas.addEventListener('touchstart', (e) => {
-        e.preventDefault();
-        const rect = canvas.getBoundingClientRect();
-        const scale = WIDTH / rect.width;
-        const tx = (e.touches[0].clientX - rect.left) * scale;
-        const ty = (e.touches[0].clientY - rect.top) * scale;
-        handleClick(tx, ty);
-    });
-}
+let canvas, ctx, sunCtx, love = 150, state = 'MENU';
+let entities = { plants: [], zombies: [], bullets: [], suns: [], bubbles: [], misas: [] };
+let selected = null, currentWave = 1, waveProgress = 0;
+let timers = { sun: 0, zombie: 0, bubble: 0 };
 
 function resize() {
-    const container = document.getElementById('game-container');
     const wrapper = document.getElementById('game-wrapper');
-    const ratio = WIDTH / HEIGHT;
-    
-    let w = wrapper.clientWidth * 0.95;
-    let h = w / ratio;
-
-    if (h > wrapper.clientHeight * 0.95) {
-        h = wrapper.clientHeight * 0.95;
-        w = h * ratio;
-    }
-
-    container.style.width = w + 'px';
-    container.style.height = h + 'px';
+    const container = document.getElementById('game-container');
+    const scale = Math.min(wrapper.clientWidth / 1100, wrapper.clientHeight / 550);
+    container.style.transform = `scale(${scale})`;
 }
 
-function handleClick(x, y) {
-    const sIdx = suns.findIndex(s => Math.hypot(s.x - x, s.y - y) < 50);
-    if(sIdx !== -1) { love += 25; suns.splice(sIdx, 1); updateCards(); return; }
+function init() {
+    canvas = document.getElementById('gameCanvas');
+    ctx = canvas.getContext('2d');
+    canvas.width = CANVAS_W; canvas.height = CANVAS_H;
+    sunCtx = document.getElementById('sun-icon-canvas').getContext('2d');
+    
+    window.addEventListener('resize', resize);
+    resize();
+
+    for(let r=0; r<ROWS; r++) {
+        entities.misas.push({ row: r, x: 20, y: r * CELL_H + CELL_H/2, active: false, spent: false });
+    }
+
+    const inv = document.getElementById('inv');
+    Object.keys(FLOWER_DATA).forEach(k => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `<span class="card-emoji">${FLOWER_DATA[k].emoji}</span><span class="card-cost">${FLOWER_DATA[k].cost}</span>`;
+        card.addEventListener('click', () => {
+            if(love >= FLOWER_DATA[k].cost && state === 'PLAY') {
+                selected = (selected === k) ? null : k;
+                document.querySelectorAll('.card').forEach(c => c.classList.remove('selected'));
+                if(selected) card.classList.add('selected');
+            }
+        });
+        inv.appendChild(card);
+    });
+
+    canvas.addEventListener('mousedown', handleInput);
+    canvas.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        const touch = e.touches[0];
+        handleInput(touch);
+    });
+}
+
+function handleInput(e) {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = CANVAS_W / rect.width;
+    const scaleY = CANVAS_H / rect.height;
+    const x = (e.clientX - rect.left) * scaleX;
+    const y = (e.clientY - rect.top) * scaleY;
+
+    const sunIdx = entities.suns.findIndex(s => Math.hypot(s.x - x, s.y - y) < 50);
+    if(sunIdx !== -1) { love += 25; entities.suns.splice(sunIdx, 1); return; }
 
     if(selected) {
-        const c = Math.floor(x/GRID_W), r = Math.floor(y/GRID_H);
-        if(c > 0 && c < COLS && r >= 0 && r < ROWS && !plants.some(p=>p.r===r && p.c===c)) {
-            plants.push({r, c, k: selected, x: c*GRID_W+GRID_W/2, y: r*GRID_H+GRID_H/2, hp: DATA[selected].hp, next: 0});
-            love -= DATA[selected].cost; selected = null; updateCards();
+        const col = Math.floor(x/CELL_W);
+        const row = Math.floor(y/CELL_H);
+        if(col >= 1 && col < COLS && row >= 0 && row < ROWS) {
+            if(!entities.plants.some(p => p.row === row && p.col === col)) {
+                entities.plants.push({ 
+                    row, col, key: selected, x: col*CELL_W + CELL_W/2, y: row*CELL_H + CELL_H/2, 
+                    hp: FLOWER_DATA[selected].hp, next: performance.now() + 1000, born: performance.now(), 
+                    atkAnim: 0, maxHp: FLOWER_DATA[selected].hp 
+                });
+                love -= FLOWER_DATA[selected].cost; selected = null;
+                document.querySelectorAll('.card').forEach(c => c.classList.remove('selected'));
+            }
         }
     }
 }
 
-function updateCards() {
-    document.querySelectorAll('.card').forEach((c, i) => {
-        const k = Object.keys(DATA)[i];
-        c.classList.toggle('disabled', love < DATA[k].cost);
-        c.classList.toggle('active', selected === k);
-    });
-    document.getElementById('love-count').innerText = love;
-}
+function spawnWave() {
+    waveProgress++;
+    let monsterKey = 'Sombra';
+    if(currentWave === 1 && waveProgress > 5) monsterKey = Math.random() > 0.7 ? 'Espectro' : 'Sombra';
+    if(currentWave === 2) monsterKey = ['Sombra', 'Espectro', 'Ladrão'][Math.floor(Math.random()*3)];
+    if(currentWave === 3) monsterKey = ['Espectro', 'Ladrão', 'Nuvem'][Math.floor(Math.random()*3)];
 
-function spawn() {
-    progress++;
-    const r = Math.floor(Math.random()*ROWS);
-    const type = wave === 3 && progress > 5 ? 'Nuvem' : (Math.random() > 0.7 ? 'Espectro' : 'Sombra');
-    zombies.push({
-        ...ENEMIES[type], x: WIDTH + 50, y: r*GRID_H+GRID_H/2, r,
-        hp: ENEMIES[type].hp * (1 + wave*0.2), maxHp: ENEMIES[type].hp,
-        walk: 0, flash: 0, scale: 1
+    const row = Math.floor(Math.random()*ROWS);
+    entities.zombies.push({ 
+        type: MONSTER_DATA[monsterKey], 
+        x: CANVAS_W + 50, y: row*CELL_H + CELL_H/2, 
+        row, hp: MONSTER_DATA[monsterKey].hp * (1 + (currentWave-1)*0.4), 
+        flash: 0, slow: 0, walk: Math.random() * 10 
     });
 
-    const goal = wave === 3 ? 15 : 12;
-    if(progress >= goal && wave < 3) {
-        wave++; progress = 0;
-        document.getElementById('wave-txt').innerText = `Onda ${wave}/3`;
+    const maxProgress = currentWave === 3 ? 14 : 20; 
+    if(waveProgress >= maxProgress) {
+        if(currentWave < 3) {
+            currentWave++; waveProgress = 0;
+            document.getElementById('wave-info').innerText = `Onda ${currentWave}/3`;
+        } else if(entities.zombies.length === 0) {
+            triggerWin();
+        }
     }
 }
 
-function loop(t) {
-    if(state !== 'PLAY') return requestAnimationFrame(loop);
-    
-    // Spawning
-    if(t > nextSun) { suns.push({x: 100+Math.random()*(WIDTH-200), y: -50, ty: 100+Math.random()*(HEIGHT-150), l: 400}); nextSun = t + 6000; }
-    if(t > nextZombie) { spawn(); nextZombie = t + (4000 - wave*600); }
+function update(time) {
+    if(state !== 'PLAY') { if(state === 'WIN') draw(time); requestAnimationFrame(update); return; }
 
-    // Logic
-    bullets.forEach((b, i) => {
-        b.x += 10;
-        const hit = zombies.find(z => z.r === b.r && Math.abs(z.x - b.x) < 30);
-        if(hit) { hit.hp -= b.dmg; hit.flash = 5; bullets.splice(i, 1); }
-        else if(b.x > WIDTH) bullets.splice(i, 1);
-    });
+    if(time > timers.sun) {
+        entities.suns.push({ x: 150 + Math.random()*(CANVAS_W-250), y: -30, ty: 100+Math.random()*(CANVAS_H-200), l: 500 });
+        timers.sun = time + 5000;
+    }
 
-    zombies.forEach((z, i) => {
-        const p = plants.find(p => p.r === z.r && Math.abs(p.x - z.x) < 40);
-        if(p) p.hp -= 1;
-        else z.x -= z.speed;
+    if(time > timers.zombie) {
+        spawnWave();
+        timers.zombie = time + Math.max(1600, 4500 - (currentWave*750));
+    }
 
-        z.walk += 0.1;
-        if(z.flash > 0) z.flash--;
+    if(time > timers.bubble && entities.plants.length > 0) {
+        const p = entities.plants[Math.floor(Math.random()*entities.plants.length)];
+        entities.bubbles = [{ x: p.x, y: p.y, txt: PHRASES[Math.floor(Math.random()*PHRASES.length)], l: 150 }];
+        timers.bubble = time + 7000;
+    }
 
-        if(z.x < 80) {
-            const m = misas.find(m => m.row === z.r && !m.used);
-            if(m) m.active = true;
-        }
-        if(z.x < 10) state = 'LOSE', document.getElementById('menu-lose').style.display = 'flex';
-    });
-
-    plants.forEach(p => {
-        const d = DATA[p.k];
-        if(d.type === 'prod' && t > p.next) { suns.push({x: p.x, y: p.y, ty: p.y+30, l: 300}); p.next = t + d.rate; }
-        if(d.type === 'atk' && t > p.next && zombies.some(z => z.r === p.r && z.x > p.x)) {
-            bullets.push({x: p.x+20, y: p.y-10, r: p.r, dmg: d.dmg, color: d.bullet});
-            p.next = t + d.cool;
-        }
-    });
-
-    misas.forEach(m => {
+    entities.misas.forEach(m => {
         if(m.active) {
-            m.x += 12;
-            zombies.forEach(z => { if(z.r === m.row && Math.abs(z.x - m.x) < 50) z.hp = 0; });
-            if(m.x > WIDTH) m.active = false, m.used = true;
+            m.x += 16;
+            entities.zombies.forEach(z => { if(z.row === m.row && Math.abs(z.x - m.x) < 60) z.hp = 0; });
+            if(m.x > CANVAS_W + 100) { m.active = false; m.spent = true; }
         }
     });
 
-    zombies = zombies.filter(z => z.hp > 0);
-    plants = plants.filter(p => p.hp > 0);
-    suns.forEach(s => { if(s.y < s.ty) s.y += 2; s.l--; });
-    suns = suns.filter(s => s.l > 0);
+    entities.zombies.forEach(z => {
+        const blocker = entities.plants.find(p => p.row === z.row && Math.abs(p.x - z.x) < 40);
+        if(blocker) blocker.hp -= 1.0;
+        else z.x -= z.type.speed * (z.slow > 0 ? 0.4 : 1);
+        
+        z.walk += 0.1; // Incremento da caminhada
 
-    if(wave === 3 && progress >= 15 && zombies.length === 0) {
-        state = 'WIN'; document.getElementById('menu-win').style.display = 'flex';
-    }
+        const misa = entities.misas.find(m => m.row === z.row && !m.spent && !m.active);
+        if(z.x < 80 && misa) { misa.active = true; } 
+        else if(z.x < 15) { state = 'LOSE'; document.getElementById('m-lose').style.display='flex'; }
+        if(z.flash > 0) z.flash--; if(z.slow > 0) z.slow--;
+    });
 
-    draw(t);
-    requestAnimationFrame(loop);
+    entities.bullets.forEach((b,i) => {
+        b.x += 12;
+        const hit = entities.zombies.find(z => z.row === b.row && Math.abs(z.x - b.x) < 35);
+        if(hit) {
+            hit.hp -= b.dmg; hit.flash = 5; if(b.slow) hit.slow = 120;
+            if(b.area) entities.zombies.forEach(z => { if(Math.hypot(z.x-hit.x, z.y-hit.y) < b.area) { z.hp -= b.dmg/2; z.flash=5; } });
+            entities.bullets.splice(i,1);
+        } else if(b.x > CANVAS_W) entities.bullets.splice(i,1);
+    });
+
+    entities.plants.forEach(p => {
+        const d = FLOWER_DATA[p.key];
+        if(p.atkAnim > 0) p.atkAnim -= 0.08;
+        if(d.type === 'prod' && time > p.next) { entities.suns.push({x:p.x, y:p.y, ty:p.y+40, l:450}); p.next = time+d.rate; p.atkAnim = 1.2; }
+        if(d.type === 'atk' && time > p.next && entities.zombies.some(z => z.row === p.row && z.x > p.x)) {
+            entities.bullets.push({x: p.x+15, y: p.y-15, row: p.row, dmg: d.dmg, color: d.bullet, slow: d.slow, area: d.area});
+            p.next = time + d.cool; p.atkAnim = 1;
+        }
+        if(d.type === 'bomb' && (time - p.born) > 2000) {
+            const targets = entities.zombies.filter(z => Math.hypot(z.x-p.x, z.y-p.y) < d.range);
+            if(targets.length > 0) { targets.forEach(z => { z.hp -= d.dmg; z.flash=15; }); p.hp = 0; }
+        }
+    });
+
+    entities.zombies = entities.zombies.filter(z => z.hp > 0);
+    entities.plants = entities.plants.filter(p => p.hp > 0);
+    entities.suns.forEach(s => { if(s.y < s.ty) s.y += 2; s.l--; });
+    entities.suns = entities.suns.filter(s => s.l > 0);
+    entities.bubbles.forEach(b => b.l--);
+    entities.bubbles = entities.bubbles.filter(b => b.l > 0);
+
+    draw(time);
+    requestAnimationFrame(update);
 }
 
-function draw(t) {
-    ctx.clearRect(0,0,WIDTH, HEIGHT);
-    // Grid
+function drawFlower(p, time) {
+    const data = FLOWER_DATA[p.key];
+    const sway = Math.sin(time/300 + p.x)*0.04;
+    const scaleY = 1 + (p.atkAnim > 0 ? p.atkAnim*0.3 : 0);
+    
+    ctx.save();
+    ctx.translate(p.x, p.y + 25);
+    ctx.scale(1, scaleY + sway);
+    if(p.key === 'LIRIO') {
+        ctx.beginPath(); ctx.arc(0, -20, 38, 0, Math.PI*2);
+        ctx.strokeStyle = 'rgba(128, 203, 196, 0.5)'; ctx.lineWidth = 3; ctx.setLineDash([5, 5]); ctx.stroke();
+        ctx.setLineDash([]); ctx.fillStyle = 'rgba(224, 242, 241, 0.15)'; ctx.fill();
+    }
+    ctx.fillStyle = '#2e7d32'; ctx.fillRect(-2, -35, 4, 35);
+    ctx.translate(0, -38);
+    if(p.key === 'DENTE') {
+        const g = Math.min(1.1, 0.5 + (time-p.born)/2500);
+        ctx.scale(g, g); ctx.fillStyle = '#fff';
+        for(let i=0; i<10; i++) { ctx.rotate(Math.PI/5); ctx.fillRect(0, -1, 18, 2); ctx.beginPath(); ctx.arc(18,0,3,0,Math.PI*2); ctx.fill(); }
+    } else {
+        ctx.fillStyle = data.color;
+        for(let i=0; i<6; i++) { ctx.rotate(Math.PI/3); ctx.beginPath(); ctx.ellipse(15, 0, 12, 7, 0, 0, Math.PI*2); ctx.fill(); }
+        ctx.fillStyle = p.key === 'LIRIO' ? '#4db6ac' : '#4e342e'; 
+        ctx.beginPath(); ctx.arc(0, 0, 8, 0, Math.PI*2); ctx.fill();
+    }
+    ctx.restore();
+}
+
+function draw(time) {
+    ctx.clearRect(0,0,CANVAS_W, CANVAS_H);
     for(let r=0; r<ROWS; r++) {
         for(let c=0; c<COLS; c++) {
-            ctx.fillStyle = (r+c)%2 === 0 ? '#8bc34a' : '#9ccc65';
-            ctx.fillRect(c*GRID_W, r*GRID_H, GRID_W, GRID_H);
+            ctx.fillStyle = (r+c)%2===0 ? '#8bc34a' : '#9ccc65';
+            ctx.fillRect(c*CELL_W, r*CELL_H, CELL_W, CELL_H);
         }
     }
 
-    // Plants
-    plants.forEach(p => {
-        const data = DATA[p.k];
-        ctx.save(); ctx.translate(p.x, p.y + 20);
-        const bounce = Math.sin(t/300 + p.x)*0.05;
-        ctx.scale(1, 1+bounce);
-        
-        // Bloom
-        ctx.fillStyle = data.color || '#e91e63';
-        for(let i=0; i<6; i++){
-            ctx.rotate(Math.PI/3); ctx.beginPath(); ctx.ellipse(15, 0, 12, 8, 0, 0, Math.PI*2); ctx.fill();
-        }
-        ctx.fillStyle = '#3e2723'; ctx.beginPath(); ctx.arc(0,0,6,0,Math.PI*2); ctx.fill();
-        ctx.restore();
-    });
+    entities.plants.forEach(p => drawFlower(p, time));
 
-    // Zombies con Animação Melhorada
-    zombies.forEach(z => {
+    entities.zombies.forEach(z => {
         ctx.save(); ctx.translate(z.x, z.y);
-        
-        // Animação de caminhada
-        const wobble = Math.sin(z.walk) * 5;
-        const jump = Math.abs(Math.cos(z.walk)) * 4;
+        const jump = Math.abs(Math.cos(z.walk)) * 5;
+        const wobble = Math.sin(z.walk) * 0.1;
         ctx.translate(0, -jump);
-        ctx.rotate(wobble * Math.PI/180);
-
-        // Sombras
-        ctx.fillStyle = 'rgba(0,0,0,0.2)';
-        ctx.beginPath(); ctx.ellipse(0, z.sz/2 + jump, z.sz/2, 5, 0, 0, Math.PI*2); ctx.fill();
-
-        // Corpo
-        ctx.fillStyle = z.flash > 0 ? '#fff' : z.color;
-        ctx.fillRect(-z.sz/2, -z.sz/2, z.sz, z.sz);
-        
-        // Olhos
-        ctx.fillStyle = '#ff1744';
-        ctx.beginPath(); ctx.arc(-z.sz/4, -z.sz/6, 3, 0, Math.PI*2); ctx.fill();
-        ctx.beginPath(); ctx.arc(z.sz/4, -z.sz/6, 3, 0, Math.PI*2); ctx.fill();
-        
+        ctx.rotate(wobble);
+        ctx.fillStyle = 'rgba(0,0,0,0.15)'; ctx.beginPath(); ctx.ellipse(0, 25+jump, 20, 5, 0, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = z.flash > 0 ? '#fff' : (z.slow > 0 ? '#81d4fa' : z.type.color);
+        ctx.fillRect(-z.type.sz/2, -z.type.sz/2, z.type.sz, z.type.sz);
+        ctx.fillStyle = '#ff1744'; ctx.beginPath(); ctx.arc(-6, -6, 3, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(6, -6, 3, 0, Math.PI*2); ctx.fill();
         ctx.restore();
     });
 
-    // Bullets
-    bullets.forEach(b => {
-        ctx.fillStyle = b.color; ctx.beginPath(); ctx.arc(b.x, b.y, 6, 0, Math.PI*2); ctx.fill();
-        ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
-    });
-
-    // Misas
-    misas.forEach(m => {
-        if(!m.used) {
+    entities.misas.forEach(m => {
+        if(!m.spent) {
             ctx.save(); ctx.translate(m.x, m.y);
-            ctx.font = '40px Arial'; ctx.textAlign='center'; ctx.fillText('🐈', 0, 15);
+            const bounce = m.active ? Math.sin(time/50)*5 : 0;
+            ctx.font = '50px Arial'; ctx.textAlign = 'center'; ctx.fillText('🐈', bounce, 15);
             ctx.restore();
         }
     });
 
-    // Suns
-    suns.forEach(s => {
-        ctx.save(); ctx.translate(s.x, s.y); ctx.rotate(t/500);
+    entities.bullets.forEach(b => { ctx.fillStyle = b.color; ctx.beginPath(); ctx.arc(b.x, b.y, 7, 0, Math.PI*2); ctx.fill(); });
+    entities.suns.forEach(s => {
+        ctx.save(); ctx.translate(s.x, s.y); ctx.rotate(time/500);
         ctx.fillStyle = '#fdd835';
-        for(let i=0; i<8; i++){
-            ctx.rotate(Math.PI/4); ctx.beginPath(); ctx.moveTo(18,0); ctx.lineTo(10,5); ctx.lineTo(10,-5); ctx.fill();
-        }
-        ctx.beginPath(); ctx.arc(0,0,10,0,Math.PI*2); ctx.fill();
-        ctx.restore();
+        for(let i=0; i<8; i++){ ctx.rotate(Math.PI/4); ctx.beginPath(); ctx.moveTo(18,0); ctx.lineTo(10,5); ctx.lineTo(10,-5); ctx.fill(); }
+        ctx.beginPath(); ctx.arc(0,0,10,0,Math.PI*2); ctx.fill(); ctx.restore();
     });
+
+    entities.bubbles.forEach(b => {
+        ctx.fillStyle = 'white'; ctx.strokeStyle = '#f06292'; ctx.lineWidth = 2;
+        const tw = ctx.measureText(b.txt).width + 30;
+        ctx.beginPath(); ctx.roundRect(b.x - tw/2, b.y - 85, tw, 35, 15); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = 'black'; ctx.font = 'bold 12px Arial'; ctx.textAlign = 'center'; ctx.fillText(b.txt, b.x, b.y - 62);
+    });
+
+    document.getElementById('love-val').innerText = Math.floor(love);
 }
 
-function start() {
-    document.getElementById('menu-start').style.display = 'none';
-    state = 'PLAY';
-    updateCards();
-    requestAnimationFrame(loop);
+function triggerWin() {
+    state = 'WIN';
+    document.getElementById('m-win').style.display = 'flex';
 }
 
-window.onload = setup;
+function startGame() { 
+    document.getElementById('m-prologue').style.display='none'; 
+    document.getElementById('top-hud').style.display='flex'; 
+    state='PLAY'; requestAnimationFrame(update); 
+}
+
+window.onload = init;
 </script>
-
-<div id="menu-lose" class="overlay" style="display:none">
-    <h1 style="color: #f44336;">O Jardim caiu...</h1>
-    <button class="btn" onclick="location.reload()">Tentar de Novo</button>
-</div>
-
 </body>
 </html>
