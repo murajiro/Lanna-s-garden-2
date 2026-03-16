@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>O jardim de Alanna 2- O jardim da princesa</title>
+    <title>O jardim de Alanna 2 - O jardim da princesa</title>
     <style>
         :root {
             --grass-light: #9ccc65;
@@ -14,22 +14,29 @@
 
         body, html {
             margin: 0; padding: 0; width: 100%; height: 100%;
-            overflow: hidden; background-color: #33691e;
+            overflow: hidden; background-color: #1b3011; /* Cor de fundo externa */
             font-family: 'Georgia', serif;
             user-select: none; -webkit-user-select: none; touch-action: none;
+            display: flex; justify-content: center; align-items: center;
         }
 
+        /* Moldura de segurança para o jogo não encostar nas bordas */
         #game-wrapper {
-            width: 100vw; height: 100vh;
+            width: 92vw; /* Deixa 4% de cada lado */
+            height: 90vh; /* Deixa 5% em cima e embaixo */
             display: flex; justify-content: center; align-items: center;
-            background: #1b3011;
+            position: relative;
         }
 
         #game-container {
             position: relative; 
-            width: 1100px; height: 550px; /* Tamanho fixo interno para proporção */
+            width: 1100px; height: 550px; 
             background: linear-gradient(to bottom, #aed581, #558b2f);
             transform-origin: center;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+            border-radius: 15px;
+            overflow: hidden;
+            border: 4px solid #3e2723;
         }
 
         #top-hud {
@@ -97,8 +104,8 @@
         @media (orientation: portrait) { #landscape-alert { display: flex; } }
 
         #m-win { background: radial-gradient(circle, #f48fb1, #880e4f); }
-        .heart-rain { position: absolute; pointer-events: none; animation: fall linear infinite; }
-        @keyframes fall { to { transform: translateY(100vh) rotate(360deg); } }
+        .heart-rain { position: absolute; pointer-events: none; animation: fall linear infinite; z-index: 600; }
+        @keyframes fall { to { transform: translateY(110vh) rotate(360deg); } }
     </style>
 </head>
 <body>
@@ -146,6 +153,7 @@
 </div>
 
 <script>
+// Lógica intacta do jogo
 const CELL_W = 100, CELL_H = 85, ROWS = 5, COLS = 11;
 const CANVAS_W = CELL_W * COLS;
 const CANVAS_H = CELL_H * ROWS;
@@ -176,6 +184,7 @@ let timers = { sun: 0, zombie: 0, bubble: 0 };
 function resize() {
     const wrapper = document.getElementById('game-wrapper');
     const container = document.getElementById('game-container');
+    // Calcula a escala para caber dentro da moldura mantendo a proporção 1100x550
     const scale = Math.min(wrapper.clientWidth / 1100, wrapper.clientHeight / 550);
     container.style.transform = `scale(${scale})`;
 }
@@ -301,7 +310,7 @@ function update(time) {
         if(blocker) blocker.hp -= 1.0;
         else z.x -= z.type.speed * (z.slow > 0 ? 0.4 : 1);
         
-        z.walk += 0.1; // Incremento da caminhada
+        z.walk += 0.1;
 
         const misa = entities.misas.find(m => m.row === z.row && !m.spent && !m.active);
         if(z.x < 80 && misa) { misa.active = true; } 
@@ -426,6 +435,12 @@ function draw(time) {
 function triggerWin() {
     state = 'WIN';
     document.getElementById('m-win').style.display = 'flex';
+    for(let i=0; i<30; i++) {
+        const h = document.createElement('div');
+        h.className = 'heart-rain'; h.innerHTML = '❤️';
+        h.style.left = Math.random()*100 + 'vw'; h.style.animationDuration = (2 + Math.random()*2) + 's';
+        document.body.appendChild(h);
+    }
 }
 
 function startGame() { 
