@@ -10,22 +10,26 @@
             --grass-dark: #8bc34a;
             --ui-pink: #f06292;
             --sun-yellow: #fdd835;
+            --bg-dark: #1b3011;
         }
 
         body, html {
             margin: 0; padding: 0; width: 100%; height: 100%;
-            overflow: hidden; background-color: #1b3011; /* Cor de fundo externa */
+            overflow: hidden; background-color: var(--bg-dark);
             font-family: 'Georgia', serif;
             user-select: none; -webkit-user-select: none; touch-action: none;
             display: flex; justify-content: center; align-items: center;
         }
 
-        /* Moldura de segurança para o jogo não encostar nas bordas */
-        #game-wrapper {
-            width: 92vw; /* Deixa 4% de cada lado */
-            height: 90vh; /* Deixa 5% em cima e embaixo */
-            display: flex; justify-content: center; align-items: center;
-            position: relative;
+        /* Moldura de segurança externa (Margens consideráveis) */
+        #viewport-fix {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px; /* Garante que nunca encoste nas bordas do navegador */
+            box-sizing: border-box;
         }
 
         #game-container {
@@ -33,67 +37,69 @@
             width: 1100px; height: 550px; 
             background: linear-gradient(to bottom, #aed581, #558b2f);
             transform-origin: center;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.6);
-            border-radius: 15px;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.8);
+            border-radius: 20px;
             overflow: hidden;
-            border: 4px solid #3e2723;
+            border: 6px solid #3e2723;
+            flex-shrink: 0; /* Impede que o flexbox tente esmagar o container antes da escala */
         }
 
         #top-hud {
-            position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
-            width: 95%; height: 80px;
-            padding: 8px 15px;
+            position: absolute; top: 15px; left: 50%; transform: translateX(-50%);
+            width: 92%; height: 85px;
+            padding: 8px 20px;
             display: flex; justify-content: space-between; align-items: center;
             z-index: 100;
-            background: rgba(255, 255, 255, 0.92);
+            background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
             border-radius: 50px;
-            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
             border: 3px solid var(--ui-pink);
         }
 
         .resource-container { 
-            display: flex; align-items: center; gap: 8px; 
-            background: #fff; padding: 4px 12px; border-radius: 20px;
+            display: flex; align-items: center; gap: 10px; 
+            background: #fff; padding: 5px 15px; border-radius: 25px;
+            border: 1px solid #ffe082;
         }
-        #sun-icon-canvas { width: 32px; height: 32px; }
-        .love-text { font-size: 1.4rem; font-weight: bold; color: #f9a825; }
+        #sun-icon-canvas { width: 35px; height: 35px; }
+        .love-text { font-size: 1.6rem; font-weight: bold; color: #f9a825; }
 
-        .inventory { display: flex; gap: 6px; }
+        .inventory { display: flex; gap: 8px; }
         .card {
-            width: 54px; height: 74px; background: #fff;
-            border-radius: 10px; border: 2px solid #eee;
+            width: 60px; height: 80px; background: #fff;
+            border-radius: 12px; border: 2px solid #eee;
             display: flex; flex-direction: column; align-items: center;
             justify-content: center; cursor: pointer; transition: 0.2s;
         }
-        .card.selected { border-color: var(--ui-pink); transform: translateY(-5px); box-shadow: 0 5px 15px rgba(240, 98, 146, 0.4); }
+        .card.selected { border-color: var(--ui-pink); transform: translateY(-5px); box-shadow: 0 5px 15px rgba(240, 98, 146, 0.4); background: #fff5f8; }
         .card.disabled { opacity: 0.4; filter: grayscale(1); }
-        .card-emoji { font-size: 1.6rem; }
-        .card-cost { font-size: 0.7rem; font-weight: bold; color: #444; }
+        .card-emoji { font-size: 1.8rem; }
+        .card-cost { font-size: 0.8rem; font-weight: bold; color: #444; }
 
         canvas#gameCanvas {
             display: block;
             background: #689f38;
-            border-bottom: 8px solid #4e342e;
+            border-bottom: 10px solid #4e342e;
             position: absolute; bottom: 0;
         }
 
         .modal {
-            position: absolute; inset: 0; background: rgba(0,0,0,0.92);
+            position: absolute; inset: 0; background: rgba(0,0,0,0.95);
             display: flex; flex-direction: column; justify-content: center;
             align-items: center; z-index: 500; color: white; text-align: center;
-            padding: 25px;
+            padding: 30px;
         }
 
         .prologue-text {
-            max-width: 600px; font-size: 1.3rem; line-height: 1.6;
-            font-style: italic; color: #fce4ec; margin-bottom: 25px;
+            max-width: 650px; font-size: 1.4rem; line-height: 1.7;
+            font-style: italic; color: #fce4ec; margin-bottom: 30px;
         }
 
         .btn-action {
-            padding: 12px 40px; font-size: 1.2rem; color: #fff;
-            background: var(--ui-pink); border: none; border-radius: 30px;
-            cursor: pointer; font-weight: bold; box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            padding: 15px 45px; font-size: 1.3rem; color: #fff;
+            background: var(--ui-pink); border: none; border-radius: 35px;
+            cursor: pointer; font-weight: bold; box-shadow: 0 6px 15px rgba(0,0,0,0.3);
         }
 
         #landscape-alert {
@@ -104,18 +110,18 @@
         @media (orientation: portrait) { #landscape-alert { display: flex; } }
 
         #m-win { background: radial-gradient(circle, #f48fb1, #880e4f); }
-        .heart-rain { position: absolute; pointer-events: none; animation: fall linear infinite; z-index: 600; }
+        .heart-rain { position: absolute; pointer-events: none; animation: fall linear infinite; z-index: 600; font-size: 24px; }
         @keyframes fall { to { transform: translateY(110vh) rotate(360deg); } }
     </style>
 </head>
 <body>
 
 <div id="landscape-alert">
-    <div style="font-size: 3rem;">📱🔄</div>
-    <h2>Vire o celular para jogar</h2>
+    <div style="font-size: 4rem; margin-bottom: 20px;">📱🔄</div>
+    <h2>Princesa, vire o celular para o lado</h2>
 </div>
 
-<div id="game-wrapper">
+<div id="viewport-fix">
     <div id="game-container">
         <div id="top-hud" style="display: none;">
             <div class="resource-container">
@@ -123,37 +129,36 @@
                 <span id="love-val" class="love-text">150</span>
             </div>
             <div class="inventory" id="inv"></div>
-            <div id="wave-info" style="font-weight:bold; color:#ad1457; font-size:0.9rem; padding:0 10px;">Onda 1/3</div>
+            <div id="wave-info" style="font-weight:bold; color:#ad1457; font-size:1rem; padding:0 10px;">Onda 1/3</div>
         </div>
 
         <canvas id="gameCanvas"></canvas>
 
         <div id="m-prologue" class="modal">
-            <h1 style="color: var(--ui-pink); font-size: 2.2rem;">O jardim de Alanna 2</h1>
+            <h1 style="color: var(--ui-pink); font-size: 2.8rem; margin-bottom: 10px;">O jardim de Alanna 2</h1>
             <div class="prologue-text">
                 "Era uma vez uma linda princesa que vivia no reino de Lannaland. <br><br>
                 Um dia, monstros ousaram atacá-la, mas o seu jardim encantado a protege."
             </div>
-            <button class="btn-action" onclick="startGame()">Começar Defesa</button>
+            <button class="btn-action" onclick="startGame()">Entrar no Jardim</button>
         </div>
 
         <div id="m-win" class="modal" style="display:none">
-            <h2 style="font-size: 2.2rem;">💖 Vitória do Amor! 💖</h2>
-            <p style="font-size: 1.3rem; line-height: 1.6; margin: 20px 0;">
-                Feliz 5 meses, minha princesa. Obrigado por me escolher.<br><strong>EU TE AMO!</strong>
+            <h2 style="font-size: 2.5rem; margin-bottom: 15px;">💖 Vitória do Amor! 💖</h2>
+            <p style="font-size: 1.4rem; line-height: 1.6; margin: 20px 0;">
+                Feliz 5 meses, minha princesa. Obrigado por me escolher.<br><strong style="font-size: 1.8rem;">EU TE AMO!</strong>
             </p>
-            <button class="btn-action" style="background: white; color: #ad1457;" onclick="location.reload()">Recomeçar</button>
+            <button class="btn-action" style="background: white; color: #ad1457;" onclick="location.reload()">Jogar de Novo</button>
         </div>
 
         <div id="m-lose" class="modal" style="display:none">
-            <h1 style="color: #ff5252;">O Jardim foi invadido...</h1>
+            <h1 style="color: #ff5252; font-size: 2.5rem;">O Jardim foi invadido...</h1>
             <button class="btn-action" onclick="location.reload()">Tentar Novamente</button>
         </div>
     </div>
 </div>
 
 <script>
-// Lógica intacta do jogo
 const CELL_W = 100, CELL_H = 85, ROWS = 5, COLS = 11;
 const CANVAS_W = CELL_W * COLS;
 const CANVAS_H = CELL_H * ROWS;
@@ -182,11 +187,18 @@ let selected = null, currentWave = 1, waveProgress = 0;
 let timers = { sun: 0, zombie: 0, bubble: 0 };
 
 function resize() {
-    const wrapper = document.getElementById('game-wrapper');
+    const wrapper = document.getElementById('viewport-fix');
     const container = document.getElementById('game-container');
-    // Calcula a escala para caber dentro da moldura mantendo a proporção 1100x550
-    const scale = Math.min(wrapper.clientWidth / 1100, wrapper.clientHeight / 550);
-    container.style.transform = `scale(${scale})`;
+    
+    const availableW = wrapper.clientWidth;
+    const availableH = wrapper.clientHeight;
+    
+    // Calcula escala baseada na largura e altura para nunca cortar nada
+    const scaleX = availableW / 1100;
+    const scaleY = availableH / 550;
+    const finalScale = Math.min(scaleX, scaleY);
+    
+    container.style.transform = `scale(${finalScale})`;
 }
 
 function init() {
@@ -232,7 +244,7 @@ function handleInput(e) {
     const x = (e.clientX - rect.left) * scaleX;
     const y = (e.clientY - rect.top) * scaleY;
 
-    const sunIdx = entities.suns.findIndex(s => Math.hypot(s.x - x, s.y - y) < 50);
+    const sunIdx = entities.suns.findIndex(s => Math.hypot(s.x - x, s.y - y) < 60);
     if(sunIdx !== -1) { love += 25; entities.suns.splice(sunIdx, 1); return; }
 
     if(selected) {
@@ -395,10 +407,10 @@ function draw(time) {
     entities.zombies.forEach(z => {
         ctx.save(); ctx.translate(z.x, z.y);
         const jump = Math.abs(Math.cos(z.walk)) * 5;
-        const wobble = Math.sin(z.walk) * 0.1;
+        const wobble = Math.sin(z.walk) * 0.12;
         ctx.translate(0, -jump);
         ctx.rotate(wobble);
-        ctx.fillStyle = 'rgba(0,0,0,0.15)'; ctx.beginPath(); ctx.ellipse(0, 25+jump, 20, 5, 0, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = 'rgba(0,0,0,0.2)'; ctx.beginPath(); ctx.ellipse(0, 25+jump, 20, 6, 0, 0, Math.PI*2); ctx.fill();
         ctx.fillStyle = z.flash > 0 ? '#fff' : (z.slow > 0 ? '#81d4fa' : z.type.color);
         ctx.fillRect(-z.type.sz/2, -z.type.sz/2, z.type.sz, z.type.sz);
         ctx.fillStyle = '#ff1744'; ctx.beginPath(); ctx.arc(-6, -6, 3, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(6, -6, 3, 0, Math.PI*2); ctx.fill();
@@ -408,7 +420,7 @@ function draw(time) {
     entities.misas.forEach(m => {
         if(!m.spent) {
             ctx.save(); ctx.translate(m.x, m.y);
-            const bounce = m.active ? Math.sin(time/50)*5 : 0;
+            const bounce = m.active ? Math.sin(time/50)*8 : 0;
             ctx.font = '50px Arial'; ctx.textAlign = 'center'; ctx.fillText('🐈', bounce, 15);
             ctx.restore();
         }
@@ -426,7 +438,7 @@ function draw(time) {
         ctx.fillStyle = 'white'; ctx.strokeStyle = '#f06292'; ctx.lineWidth = 2;
         const tw = ctx.measureText(b.txt).width + 30;
         ctx.beginPath(); ctx.roundRect(b.x - tw/2, b.y - 85, tw, 35, 15); ctx.fill(); ctx.stroke();
-        ctx.fillStyle = 'black'; ctx.font = 'bold 12px Arial'; ctx.textAlign = 'center'; ctx.fillText(b.txt, b.x, b.y - 62);
+        ctx.fillStyle = 'black'; ctx.font = 'bold 13px Arial'; ctx.textAlign = 'center'; ctx.fillText(b.txt, b.x, b.y - 62);
     });
 
     document.getElementById('love-val').innerText = Math.floor(love);
@@ -435,11 +447,13 @@ function draw(time) {
 function triggerWin() {
     state = 'WIN';
     document.getElementById('m-win').style.display = 'flex';
-    for(let i=0; i<30; i++) {
-        const h = document.createElement('div');
-        h.className = 'heart-rain'; h.innerHTML = '❤️';
-        h.style.left = Math.random()*100 + 'vw'; h.style.animationDuration = (2 + Math.random()*2) + 's';
-        document.body.appendChild(h);
+    for(let i=0; i<40; i++) {
+        setTimeout(() => {
+            const h = document.createElement('div');
+            h.className = 'heart-rain'; h.innerHTML = ['❤️', '💖', '💝', '💕'][Math.floor(Math.random()*4)];
+            h.style.left = Math.random()*100 + 'vw'; h.style.animationDuration = (3 + Math.random()*2) + 's';
+            document.body.appendChild(h);
+        }, i * 150);
     }
 }
 
